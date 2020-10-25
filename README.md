@@ -1,2 +1,1 @@
-# paint
-Simple paint app
+# Canvas hit detection and dragging

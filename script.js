@@ -1,110 +1,151 @@
-var canvas = document.querySelector("#canvas");
-if(canvas.getContext) {
-	var ctx = canvas.getContext("2d");
-}
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const width = canvas.width = window.innerWidth;
+const height = canvas.height = window.innerHeight;
+let circles = [];
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+class Color {
+  constructor() {
+    this.names = {
+      aqua: "#00ffff",
+      azure: "#f0ffff",
+      beige: "#f5f5dc",
+      black: "#000000",
+      blue: "#0000ff",
+      brown: "#a52a2a",
+      cyan: "#00ffff",
+      darkblue: "#00008b",
+      darkcyan: "#008b8b",
+      darkgrey: "#a9a9a9",
+      darkgreen: "#006400",
+      darkkhaki: "#bdb76b",
+      darkmagenta: "#8b008b",
+      darkolivegreen: "#556b2f",
+      darkorange: "#ff8c00",
+      darkorchid: "#9932cc",
+      darkred: "#8b0000",
+      darksalmon: "#e9967a",
+      darkviolet: "#9400d3",
+      fuchsia: "#ff00ff",
+      gold: "#ffd700",
+      green: "#008000",
+      indigo: "#4b0082",
+      khaki: "#f0e68c",
+      lightblue: "#add8e6",
+      lightcyan: "#e0ffff",
+      lightgreen: "#90ee90",
+      lightgrey: "#d3d3d3",
+      lightpink: "#ffb6c1",
+      lightyellow: "#ffffe0",
+      lime: "#00ff00",
+      magenta: "#ff00ff",
+      maroon: "#800000",
+      navy: "#000080",
+      olive: "#808000",
+      orange: "#ffa500",
+      pink: "#ffc0cb",
+      purple: "#800080",
+      violet: "#800080",
+      red: "#ff0000",
+      silver: "#c0c0c0",
+      white: "#ffffff",
+      yellow: "#ffff00"
+    };
+  }
 
-ctx.fillStyle = "black";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+  random() {
+    var result;
+    var count = 0;
+    for (var prop in this.names)
+      if (Math.random() < 1/++count)
+        result = this.names[prop];
+        return result;
+  }
+};
 
-function Triangle(inInitPosX, inInitPosY, inPosX, inPosY, inTriSide, inDistance, inColor) {
-    this.x1 = inInitPosX;
-    this.y1 = inInitPosY;
-    this.x2 = inPosX;
-    this.y2 = inPosY;
-    this.triSide = inTriSide;
-    this.distance = inDistance;
+class Circle {
+  constructor(inX, inY, inRadius, inColor) {
+    this.x = inX;
+    this.y = inY;
+    this.radius = inRadius;
     this.color = inColor;
-}
+    this.dragging = false;
+    this.drag = this.drag;
+    this.draw = this.draw;
+  }
 
-Triangle.prototype.draw = function() {
+  draw() {
     ctx.beginPath();
-    ctx.moveTo(this.x1, this.y1);
-    ctx.lineTo(this.x2, this.y2);
-    ctx.lineTo(this.x1 + this.triSide/2, this.y1 + this.distance);
-    if(flag == 0) {
-        ctx.closePath();
-    }
-    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+    ctx.fillStyle = this.color; 
     ctx.fill();
+  }
+
+  drag(inX, inY) {
+    this.x = inX;
+    this.y = inY;
+    this.draw();
+  }
+};
+
+function clear() {
+  ctx.clearRect(0, 0, width, height);
 }
 
+function drawCircles() {
+  circles.forEach((circle) => {
+    circle.draw();
+  });
+}
 
-// Algorithm for triangle generation
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
 
-function drawTriangle(inEvent) {  
-    if(flag==1) {
-        // to get the distance between a point where mouse is clicked and a point where mouse drag ends  
-        dist = Math.pow(Math.abs(parseInt(Math.pow(parseInt(inEvent.clientX-initX),2)-Math.pow(parseInt(inEvent.clientY-initY),2))),0.5);
+let isDown = false;
 
-        //To draw equilateral triangle, we have initial point and let us asssume the obtained distance as the hegiht of tringle.
-        //Using this, we can get the side of the tringle, thereby we obtain the right and left side vertices points.
-        triSide=1.1547*dist;
-        var triangleColor = getColor();
-        var triangle = new Triangle(initX, initY, inEvent.clientX, inEvent.clientY, triSide, dist, triangleColor);     
-        triangles.push(triangle);
-        triangle.draw();
+canvas.addEventListener("mousedown", (e) => {
+  isDown = true;
+  circles.forEach(circle => {
+    if(Math.sqrt((e.clientX-circle.x) ** 2 + (e.clientY - circle.y) ** 2) < circle.radius) { 
+      circle.dragging = true;
+      return;
     }
+    circle.dragging = false;circle.x === e.clientX || circle.y === e.clientY
+  });
+});
 
-function drawTriangle(inEvent) {
-       // to get the distance between a point where mouse is clicked and a point where mouse drag ends  
-     dist=Math.pow(Math.abs(parseInt(Math.pow(parseInt(inEvent.clientX-initX),2)-Math.pow(parseInt(inEvent.clientY-initY),2))),0.5);
+canvas.addEventListener("mousemove", (e) => {
+  if(isDown) {
+    clear();
+    drawCircles();
+    circles.forEach(circle => {
+      if(circle.dragging) { 
+        circle.x = e.clientX;
+        circle.y = e.clientY;
+        if(circle.drag) {
+          circle.drag(circle.x, circle.y);
+        }
+      }
+    });
+  }
+});
 
-     //To draw equilateral triangle, we have initial point and let us asssume the obtained distance as the hegiht of tringle.
-     //Using this, we can get the side of the tringle, thereby we obtain the right and left side vertices points.
-
-    triSide=1.1547*dist;
-            
-	ctx.beginPath();
-	ctx.moveTo(initX, initY);
-	ctx.lineTo(initX-triSide/2,initY+dist);
-	ctx.lineTo(initX+triSide/2,initY+dist);
-	ctx.closePath();
-
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = '#666666';
-	ctx.stroke();
-
-	ctx.fillStyle =getColor();
-	ctx.fill();
-
-}
-
-function getColor()
-{
-	return '#'+Math.random().toString(16).slice(-6);
-}
-
-
-    var flag = 0;
-    var initX,initY;
-    var dist;
-    var triSide;
-
-    var triangles = [];
-
-
-// To get the initial point 
-document.addEventListener("mousedown", function(event){
-    flag = 0;
-    initX=event.clientX;
-    initY=event.clientY;
-}, false);
-
-// To enable click into drag event 
-document.addEventListener("mousemove", function(){
-    flag = 1;
-}, false);
-
-// To draw triandle according to drag size
-
-document.addEventListener("mouseup", drawTriangle, false);
-
-document.addEventListener("mouseup", function(){
-   if(flag === 1){
-        drawTriangle(event);
+canvas.addEventListener("mouseup", (e) => {
+  isDown = false;
+  const pixel = ctx.getImageData(e.clientX, e.clientY, 1, 1).data;
+  const color = `#${componentToHex(pixel[0])}${componentToHex(pixel[1])}${componentToHex(pixel[2])}`;
+  if(color === "#000000") {
+    c = new Circle(e.clientX, e.clientY, 30, new Color().random());
+    c.draw();
+    circles.push(c);
+    return;
+  }
+  circles.forEach(circle => {
+    if(circle.color === color) {
+      return;
     }
-}, false);
+  });
+});
 
