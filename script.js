@@ -112,7 +112,7 @@ canvas.addEventListener("mousedown", (e) => {
       circle.dragging = true;
       return;
     }
-    circle.dragging = false;circle.x === e.clientX || circle.y === e.clientY
+    circle.dragging = false;
   });
 });
 
